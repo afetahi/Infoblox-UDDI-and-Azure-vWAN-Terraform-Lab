@@ -1,4 +1,3 @@
-cat > terraform/README.md <<'EOF'
 # Anycast DNS with Infoblox NIOS-X and Azure Virtual WAN
 
 This Terraform project automates the deployment of a multi-region Anycast DNS architecture using Infoblox NIOS-X appliances integrated with Azure Virtual WAN.  
@@ -89,17 +88,22 @@ niosx_peers = [
     peer_asn = 64584
   }
 ]
+```hcl
 
 # Optional NIOS-X VM Deployment
+```hcl
 deploy_niosx_vms   = false
 ssh_public_key     = "~/.ssh/id_rsa.pub"
+```hcl
 
 Deployment
 
+```hcl
 cd terraform
 terraform init
 terraform plan
 terraform apply
+```hcl
 
 Terraform will deploy the entire topology end-to-end, including VNets, hubs, connections, route tables, and BGP peering.
 
@@ -113,18 +117,20 @@ Ping and DNS resolution via Anycast from spoke VMs work successfully
 
 Example test from a spoke VM:
 
+```hcl
 ping 10.100.100.10
 dig @10.100.100.10 infoblox.com +short
+```hcl
 
 Cleanup
 
 To destroy the environment:
+```hcl
 terraform destroy
+```hcl
 
 References
 
 Infoblox Universal DDI Documentation: https://docs.infoblox.com/
 Azure Virtual WAN BGP Peering : https://learn.microsoft.com/en-us/azure/virtual-wan/scenario-bgp-peering-hub?utm_source=chatgpt.com
-
 Anycast DNS on Azure Blog: (link to your blog post once published)
-EOF
