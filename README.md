@@ -28,20 +28,32 @@ All spokes resolve DNS through the Anycast IP, achieving cross-region resiliency
 | France Central         | 10.110.4.0/22 | 64583 / 64584 | 10.108.0.4 / 10.108.1.4 | 10.100.100.10/32 |
 
 ## Repository Structure
-terraform/
-├── main.tf
-├── providers.tf
-├── variables.tf
-├── outputs.tf
-├── versions.tf
-├── terraform.tfvars # Edit this with your values
-├── README.md
-└── modules/
-├── vwan/
-├── vnet/
-├── hub-connections/
-├── hub-bgp/
-└── niosx-vm/
+
+```text
+.
+├── docs/
+│   └── azure-vwan-anycast-architecture.jpeg
+├── modules/
+│   ├── hub-bgp/
+│   │   └── main.tf
+│   ├── hub-connections/
+│   │   └── main.tf
+│   ├── niosx-vm/
+│   │   ├── cloud-init.tpl
+│   │   └── main.tf
+│   ├── vnet/
+│   │   └── main.tf
+│   └── vwan/
+│       └── main.tf
+└── terraform/
+    ├── main.tf
+    ├── outputs.tf
+    ├── providers.tf
+    ├── terraform.tfvars
+    ├── variables.tf
+    └── versions.tf
+
+```
 
 ## Prerequisites
 
@@ -131,6 +143,10 @@ terraform destroy
 
 References
 
+```text
 Infoblox Universal DDI Documentation: https://docs.infoblox.com/
+
 Azure Virtual WAN BGP Peering : https://learn.microsoft.com/en-us/azure/virtual-wan/scenario-bgp-peering-hub?utm_source=chatgpt.com
+
 Anycast DNS on Azure Blog: (link to your blog post once published)
+```
