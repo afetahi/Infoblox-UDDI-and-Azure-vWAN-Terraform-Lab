@@ -1,4 +1,4 @@
-# Anycast DNS with Infoblox NIOS-X and Azure Virtual WAN
+# Infoblox UDDI and Azure Virtual WAN Terraform Lab
 
 This Terraform project automates the deployment of a multi-region Anycast DNS architecture using Infoblox NIOS-X appliances integrated with Azure Virtual WAN.  
 It mirrors the reference lab and blog post demonstrating how to build a resilient, scalable DNS fabric with BGP Anycast across multiple Azure regions.
