@@ -20,7 +20,7 @@ All spokes resolve DNS through the Anycast IP, achieving cross-region resiliency
 
 ## Architecture
 
-![Azure vWAN Anycast Architecture](./docs/azure-vwan-anycast-architecture.png)
+![Azure vWAN Anycast Architecture](./docs/azure-vwan-anycast-architecture.jpeg)
 
 | Region                 | Hub CIDR      | NIOS-X ASN | NIOS-X IPs            | Anycast Prefix      |
 |------------------------|--------------|-----------|------------------------|---------------------|
