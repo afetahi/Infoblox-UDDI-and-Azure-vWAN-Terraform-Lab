@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Local .terraform directories
 .terraform/
 
@@ -35,3 +36,9 @@ override.tf.json
 # Ignore CLI configuration files
 .terraformrc
 terraform.rc
+=======
+.terraform/
+*.tfstate
+*.tfstate.backup
+.DS_Store
+>>>>>>> 0c81bf0 (Initial commit: Terraform lab for Infoblox UDDI and Azure vWAN Anycast)
