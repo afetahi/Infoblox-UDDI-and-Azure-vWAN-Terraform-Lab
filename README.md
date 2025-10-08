@@ -20,7 +20,7 @@ All spokes resolve DNS through the Anycast IP, achieving cross-region resiliency
 
 ## Architecture
 
-![Architecture](./NIOS-X_and_Azure_vWAN_Anycast.jpeg)
+![Azure vWAN Anycast Architecture](./docs/azure-vwan-anycast-architecture.png)
 
 | Region                 | Hub CIDR      | NIOS-X ASN | NIOS-X IPs            | Anycast Prefix      |
 |------------------------|--------------|-----------|------------------------|---------------------|
@@ -88,13 +88,13 @@ niosx_peers = [
     peer_asn = 64584
   }
 ]
-```hcl
+```
 
 # Optional NIOS-X VM Deployment
 ```hcl
 deploy_niosx_vms   = false
 ssh_public_key     = "~/.ssh/id_rsa.pub"
-```hcl
+```
 
 Deployment
 
@@ -103,7 +103,7 @@ cd terraform
 terraform init
 terraform plan
 terraform apply
-```hcl
+```
 
 Terraform will deploy the entire topology end-to-end, including VNets, hubs, connections, route tables, and BGP peering.
 
@@ -120,14 +120,14 @@ Example test from a spoke VM:
 ```hcl
 ping 10.100.100.10
 dig @10.100.100.10 infoblox.com +short
-```hcl
+```
 
 Cleanup
 
 To destroy the environment:
 ```hcl
 terraform destroy
-```hcl
+```
 
 References
 
