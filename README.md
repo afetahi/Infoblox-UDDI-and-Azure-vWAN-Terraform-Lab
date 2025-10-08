@@ -121,11 +121,20 @@ Terraform will deploy the entire topology end-to-end, including VNets, hubs, con
 
 Validation
 
-After the deployment completes, validate that:
+After the Terraform deployment completes:
 
-The Anycast prefix 10.100.100.10/32 appears in Effective Routes of both hubs and spokes
-BGP peering is established under Virtual Hub → BGP Peers
-Ping and DNS resolution via Anycast from spoke VMs work successfully
+```text
+1. Manually configure the NIOS-X appliances:
+   - Enable DNS service.
+   - Assign the Anycast IP `10.100.100.10/32`.
+   - Establish BGP peering with each hub router IP.
+   - Advertise the Anycast prefix.
+   
+2. Once NIOS-X starts advertising the prefix, validate in the Azure portal:
+   - The Anycast prefix appears in **Effective Routes** of both hubs and spoke VNets.
+   - BGP peering is shown as **Established** under each Virtual Hub → BGP Connections.
+   - Spoke VMs can ping the Anycast IP and resolve DNS through it.
+```
 
 Example test from a spoke VM:
 
