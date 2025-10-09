@@ -3,6 +3,8 @@
 This Terraform project automates the deployment of a multi-region Anycast DNS architecture using Infoblox NIOS-X appliances integrated with Azure Virtual WAN.  
 It mirrors the reference lab and blog post demonstrating how to build a resilient, scalable DNS fabric with BGP Anycast across multiple Azure regions.
 
+Note: This repository automates only the Azure infrastructure (vWAN, hubs, VNets, route tables, and virtual hub BGP peer configuration). NIOS-X appliances (DNS, Anycast, BGP advertisement) must be configured manually after deployment through the Infoblox UDDI portal.
+
 ## Overview
 
 The deployment builds the following environment:
@@ -124,16 +126,20 @@ Validation
 After the Terraform deployment completes:
 
 ```text
+
 1. Manually configure the NIOS-X appliances:
-   - Enable DNS service.
+
+   - Enable DNS service on each appliance.
    - Assign the Anycast IP `10.100.100.10/32`.
-   - Establish BGP peering with each hub router IP.
+   - Establish BGP peering with the hub router IPs.
    - Advertise the Anycast prefix.
-   
+
 2. Once NIOS-X starts advertising the prefix, validate in the Azure portal:
-   - The Anycast prefix appears in **Effective Routes** of both hubs and spoke VNets.
-   - BGP peering is shown as **Established** under each Virtual Hub → BGP Connections.
-   - Spoke VMs can ping the Anycast IP and resolve DNS through it.
+
+   - The Anycast prefix `10.100.100.10/32` appears in **Effective Routes** of both hubs and spoke VNets.
+   - BGP peering shows as **Established** under each **Virtual Hub → BGP Connections**.
+   - Spoke VMs can ping the Anycast IP and resolve DNS queries through it.
+
 ```
 
 Example test from a spoke VM:
