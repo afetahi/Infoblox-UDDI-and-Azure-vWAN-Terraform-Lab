@@ -105,4 +105,4 @@ ssh_public_key = "~/.ssh/id_rsa.pub"
 # Infoblox Join Token
 # =====================================================================================
 # Leave this commented out — Terraform will prompt interactively at runtime.
-# infoblox_join_token = "dXMtY29tLTE....ibjt"
+# infoblox_join_token = "join token"
