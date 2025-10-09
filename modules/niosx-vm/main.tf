@@ -74,11 +74,11 @@ variable "tags" {
 # Network Interface (with IP forwarding)
 ############################################
 resource "azurerm_network_interface" "nic" {
-  name                = "${var.vm_name_prefix}-nic"
-  resource_group_name = var.rg_name
-  location            = var.location
+  name                  = "${var.vm_name_prefix}-nic"
+  resource_group_name   = var.rg_name
+  location              = var.location
   ip_forwarding_enabled = var.enable_ip_forwarding
-  
+
   ip_configuration {
     name                          = "ipcfg"
     subnet_id                     = var.subnet_id

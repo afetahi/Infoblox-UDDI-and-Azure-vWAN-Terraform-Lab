@@ -1,37 +1,24 @@
-# --- Terraform local dirs & state ---
+# Terraform directories and state
 .terraform/
 *.tfstate
 *.tfstate.*
-.terraform.tfstate.lock.info
+.terraform.lock.hcl
 
-# Crash logs
-crash.log
-crash.*.log
-
-# --- Sensitive variables (never commit) ---
+# Sensitive files
 *.tfvars
-*.tfvars.json
-*.auto.tfvars
-*.env
-
-# SSH/keys/certs (belt & suspenders)
 *.pem
 *.key
-*.pub
-*.pfx
 *.crt
-*.cer
-*.json
-
-# Plans & backups
-*.backup
+*.pub
 *.log
-*tfplan*
+*.bak
+*.backup
+*.zip
 
-# Terraform CLI config
-.terraformrc
-terraform.rc
+# SSH keys and local outputs
+**/.ssh/*
+!docs/
 
-# OS/editor noise
+# OS junk
 .DS_Store
 Thumbs.db

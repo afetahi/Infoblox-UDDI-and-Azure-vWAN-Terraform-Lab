@@ -51,6 +51,20 @@ module "hub_bgp" {
   anycast = var.anycast_prefix
 }
 
+# Generate one SSH keypair per region
+resource "tls_private_key" "niosx" {
+  for_each  = var.locations
+  algorithm = "ED25519"
+}
+
+# Save each private key locally (never commit these files)
+resource "local_sensitive_file" "niosx_private_key" {
+  for_each        = var.locations
+  filename        = pathexpand("~/.ssh/niosx_${each.key}")
+  content         = tls_private_key.niosx[each.key].private_key_openssh
+  file_permission = "0600"
+}
+
 # Optional: deploy NIOS-X VMs
 module "niosx_vms" {
   source   = "../modules/niosx-vm"
@@ -66,8 +80,9 @@ module "niosx_vms" {
   vm_size              = var.niosx_vm_size # or leave unset to use module default
   enable_ip_forwarding = true
 
+  # Pass the PUBLIC key content generated above
   admin_username = var.admin_username
-  ssh_public_key = file(var.ssh_public_key)
+  ssh_public_key = tls_private_key.niosx[each.key].public_key_openssh
 
   # this makes apply prompt you if you didn’t set it in tfvars/env
   join_token = var.infoblox_join_token

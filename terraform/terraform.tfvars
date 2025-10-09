@@ -7,8 +7,8 @@
 subscription_id = "00000000-0000-0000-0000-000000000000"
 
 # Global naming prefix
-prefix          = "iblox-azure-anycast"
-anycast_prefix  = "10.100.100.10/32"
+prefix         = "iblox-azure-anycast"
+anycast_prefix = "10.100.100.10/32"
 
 # =====================================================================================
 # Regional configuration

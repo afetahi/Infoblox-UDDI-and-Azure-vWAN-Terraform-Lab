@@ -41,3 +41,19 @@ output "niosx_vm_private_ips" {
   description = "Private IPs of NIOS-X VMs by region (empty if not deployed)."
   value       = try({ for k, m in module.niosx_vms : k => m.private_ip }, {})
 }
+
+# Path to the generated private keys (sensitive)
+output "ssh_key_paths" {
+  description = "Local paths to the generated SSH private keys per region"
+  value       = { for k in keys(var.locations) : k => local_sensitive_file.niosx_private_key[k].filename }
+  sensitive   = true
+}
+
+# Convenience SSH commands using generated keys (private connectivity required)
+output "ssh_commands" {
+  description = "SSH commands to reach NIOS-X (needs private path/VPN/ER/Bastion)"
+  value = {
+    for k, m in module.niosx_vms :
+    k => "ssh -i ${local_sensitive_file.niosx_private_key[k].filename} ${var.admin_username}@${m.private_ip}"
+  }
+}
