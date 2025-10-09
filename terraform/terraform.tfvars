@@ -16,16 +16,16 @@ locations = {
       asn          = 65515
     }
     vnet_shared = {
-      name   = "vnet_shared_gwc"
-      cidr   = "10.104.0.0/16"
+      name = "vnet_shared_gwc"
+      cidr = "10.104.0.0/16"
       subnets = {
         niosx = "10.104.0.0/24"
         mgmt  = "10.104.1.0/24"
       }
     }
     vnet_spoke = {
-      name   = "vnet_spoke_gwc"
-      cidr   = "10.114.0.0/16"
+      name = "vnet_spoke_gwc"
+      cidr = "10.114.0.0/16"
       subnets = {
         vm = "10.114.0.0/24"
       }
@@ -45,16 +45,16 @@ locations = {
       asn          = 65515
     }
     vnet_shared = {
-      name   = "vnet_shared_fc"
-      cidr   = "10.108.0.0/16"
+      name = "vnet_shared_fc"
+      cidr = "10.108.0.0/16"
       subnets = {
         niosx = "10.108.0.0/24"
         mgmt  = "10.108.1.0/24"
       }
     }
     vnet_spoke = {
-      name   = "vnet_spoke_fc"
-      cidr   = "10.118.0.0/16"
+      name = "vnet_spoke_fc"
+      cidr = "10.118.0.0/16"
       subnets = {
         vm = "10.118.0.0/24"
       }
@@ -71,10 +71,10 @@ deploy_niosx_vms = false
 
 # Set only when deploy_niosx_vms = true; use the real Marketplace image values
 niosx_image = {
-  publisher = "infoblox"    # TODO
-  offer     = "nios-x"      # TODO
-  sku       = "byol"        # TODO
-  version   = "latest"      # or a pinned version
+  publisher = "infoblox" # TODO
+  offer     = "nios-x"   # TODO
+  sku       = "byol"     # TODO
+  version   = "latest"   # or a pinned version
 }
 
 # admin_username   = "azureuser"
