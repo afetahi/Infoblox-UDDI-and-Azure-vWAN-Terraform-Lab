@@ -11,7 +11,7 @@ resource "azurerm_virtual_hub_route_table" "spoke" {
   name           = var.spoke_rt_name
   virtual_hub_id = var.hub_id
   labels         = ["Spokes"]
-  routes         = []
+  
 }
 
 resource "azurerm_virtual_hub_connection" "shared" {
@@ -38,4 +38,11 @@ resource "azurerm_virtual_hub_connection" "spoke" {
 
 output "rt_names" {
   value = { spoke = azurerm_virtual_hub_route_table.spoke.name }
+}
+output "connection_names" {
+  description = "Names of the shared and spoke hub connections"
+  value = {
+    shared = azurerm_virtual_hub_connection.shared.name
+    spoke  = azurerm_virtual_hub_connection.spoke.name
+  }
 }

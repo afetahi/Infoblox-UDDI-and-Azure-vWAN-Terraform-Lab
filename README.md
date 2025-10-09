@@ -1,21 +1,22 @@
 # Infoblox UDDI and Azure Virtual WAN Terraform Lab
 
-This Terraform project automates the deployment of a multi-region Anycast DNS architecture using Infoblox NIOS-X appliances integrated with Azure Virtual WAN.  
-It mirrors the reference lab and blog post demonstrating how to build a resilient, scalable DNS fabric with BGP Anycast across multiple Azure regions.
+This Terraform lab automates deployment of a multi-region Anycast DNS architecture using Infoblox NIOS-X appliances integrated with Azure Virtual WAN (vWAN).
+It mirrors the Infoblox reference lab demonstrating how to build a scalable, resilient DNS fabric with BGP Anycast across multiple Azure regions.
 
-Note: This repository automates only the Azure infrastructure (vWAN, hubs, VNets, route tables, and virtual hub BGP peer configuration). NIOS-X appliances (DNS, Anycast, BGP advertisement) must be configured manually after deployment through the Infoblox UDDI portal.
+Note:
+Terraform automates only the Azure infrastructure (Virtual WAN, hubs, VNets, connections, route tables, and BGP peering).
+NIOS-X appliances (DNS, Anycast IP, and BGP configuration) must still be configured manually after deployment.
 
 ## Overview
 
 The deployment builds the following environment:
 
-- One Azure Virtual WAN  
-- Two Virtual WAN hubs (Germany West Central and France Central)  
-- Shared Services VNets in each region (hosting NIOS-X appliances)  
-- Spoke VNets in each region connected through the hubs  
-- Custom route tables for spoke VNets to separate hub vs spoke routing  
-- BGP peering between NIOS-X appliances and the virtual hub router  
-- Optional NIOS-X VM deployment using Azure Marketplace image
+- Creates a global Azure Virtual WAN and regional hubs 
+- Builds shared and spoke VNets per region 
+- Connects VNets to hubs with custom route tables
+- Configures BGP peers toward NIOS-X appliances
+- Supports optional automated NIOS-X VM deployment (Marketplace image) 
+- Securely injects the Infoblox join token during deployment
 
 The result is a fully functional Anycast DNS topology using the Anycast IP `10.100.100.10/32`, advertised from NIOS-X appliances in both regions over BGP to Azure Virtual WAN hubs.  
 All spokes resolve DNS through the Anycast IP, achieving cross-region resiliency and low latency.
@@ -64,64 +65,139 @@ All spokes resolve DNS through the Anycast IP, achieving cross-region resiliency
 - Contributor permissions on the target subscription  
 - Optional: Infoblox NIOS-X image available in your Azure Marketplace subscriptions
 
+## Security and Secrets
+
+Join token input: Terraform prompts for the Infoblox join token at runtime.
+It is not written to disk, not committed to git, and not stored in state.
+
+.gitignore: The repository should include entries for:
+
+```text
+
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+
+```
+
+Never commit any file containing your join token, SSH keys, or credentials.
+
 ## Variables
 
 The key variables are defined in `terraform.tfvars`:
 
 ```hcl
-subscription_id = "<your-subscription-id>"
+subscription_id = "<your-azure-subscription-id>"
+prefix          = "iblox-azure-anycast"
+anycast_prefix  = "10.100.100.10/32"
 
-# Virtual WAN and Hubs
-vwan_name          = "vwan_gwc_01"
-region1            = "Germany West Central"
-region2            = "France Central"
-hub1_cidr          = "10.110.0.0/22"
-hub2_cidr          = "10.110.4.0/22"
-
-# Anycast & BGP
-anycast_ip         = "10.100.100.10/32"
-niosx_peers = [
-  {
-    region   = "Germany West Central"
-    peer_ip  = "10.104.0.4"
-    peer_asn = 64581
-  },
-  {
-    region   = "Germany West Central"
-    peer_ip  = "10.104.1.4"
-    peer_asn = 64582
-  },
-  {
-    region   = "France Central"
-    peer_ip  = "10.108.0.4"
-    peer_asn = 64583
-  },
-  {
-    region   = "France Central"
-    peer_ip  = "10.108.1.4"
-    peer_asn = 64584
+# Regional configuration
+locations = {
+  gwc = {
+    rg_name  = "rg_hub_gwc_01"
+    location = "germanywestcentral"
+    hub = {
+      name         = "hub_gwc_01"
+      address_cidr = "10.110.0.0/22"
+      asn          = 65515
+    }
+    vnet_shared = {
+      name   = "vnet_shared_gwc"
+      cidr   = "10.104.0.0/16"
+      subnets = {
+        niosx = "10.104.0.0/24"
+        mgmt  = "10.104.1.0/24"
+      }
+    }
+    vnet_spoke = {
+      name   = "vnet_spoke_gwc"
+      cidr   = "10.114.0.0/16"
+      subnets = {
+        vm = "10.114.0.0/24"
+      }
+    }
+    niosx_bgp_peers = [
+      { name = "niosx01azure", ip = "10.104.0.4", asn = 64581 },
+      { name = "niosx02azure", ip = "10.104.1.4", asn = 64582 },
+    ]
   }
-]
+
+  fra = {
+    rg_name  = "rg_hub_fc_01"
+    location = "francecentral"
+    hub = {
+      name         = "hub_fc_01"
+      address_cidr = "10.110.4.0/22"
+      asn          = 65515
+    }
+    vnet_shared = {
+      name   = "vnet_shared_fc"
+      cidr   = "10.108.0.0/16"
+      subnets = {
+        niosx = "10.108.0.0/24"
+        mgmt  = "10.108.1.0/24"
+      }
+    }
+    vnet_spoke = {
+      name   = "vnet_spoke_fc"
+      cidr   = "10.118.0.0/16"
+      subnets = {
+        vm = "10.118.0.0/24"
+      }
+    }
+    niosx_bgp_peers = [
+      { name = "niosx03azure", ip = "10.108.0.4", asn = 64583 },
+      { name = "niosx04azure", ip = "10.108.1.4", asn = 64584 },
+    ]
+  }
+}
+
+deploy_niosx_vms = true
+
+niosx_image = {
+  publisher = "infobloxinc"
+  offer     = "bloxone"
+  sku       = "3_3"
+  version   = "latest"
+}
+
+admin_username = "azureuser"
+ssh_public_key = "~/.ssh/id_rsa.pub"
+
 ```
 
-# Optional NIOS-X VM Deployment
-```hcl
-deploy_niosx_vms   = false
-ssh_public_key     = "~/.ssh/id_rsa.pub"
-```
+# Deployment
 
-Deployment
 
 ```hcl
-cd terraform
+
 terraform init
 terraform plan
+
+```
+When prompted:
+
+```hcl
+
+var.infoblox_join_token
+  Infoblox join token for registering NIOS-X with UDDI
+
+  Enter a value: <joint token that you get from UDDI >
+
+```
+Then:
+
+```hcl
+
 terraform apply
+
 ```
 
 Terraform will deploy the entire topology end-to-end, including VNets, hubs, connections, route tables, and BGP peering.
 
-Validation
+# Validation
 
 After the Terraform deployment completes:
 
@@ -145,23 +221,29 @@ After the Terraform deployment completes:
 Example test from a spoke VM:
 
 ```hcl
+
 ping 10.100.100.10
 dig @10.100.100.10 infoblox.com +short
+
 ```
 
 Cleanup
 
 To destroy the environment:
 ```hcl
+
 terraform destroy
+
 ```
 
 References
 
 ```text
+
 Infoblox Universal DDI Documentation: https://docs.infoblox.com/
 
 Azure Virtual WAN BGP Peering : https://learn.microsoft.com/en-us/azure/virtual-wan/scenario-bgp-peering-hub?utm_source=chatgpt.com
 
 Anycast DNS on Azure Blog: (link to your blog post once published)
+
 ```

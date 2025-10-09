@@ -1,7 +1,7 @@
 
 variable "subscription_id" { type = string }
-variable "prefix"          { type = string }                  # eg iblox-azure-anycast
-variable "anycast_prefix"  { type = string }                  # eg 10.100.100.10/32
+variable "prefix" { type = string }         # eg iblox-azure-anycast
+variable "anycast_prefix" { type = string } # eg 10.100.100.10/32
 
 variable "locations" {
   description = "Per-region settings"
@@ -11,20 +11,20 @@ variable "locations" {
 
     hub = object({
       name         = string
-      address_cidr = string         # /22 recommended
-      asn          = number         # 16-bit ASN, eg 65515
+      address_cidr = string # /22 recommended
+      asn          = number # 16-bit ASN, eg 65515
     })
 
     vnet_shared = object({
       name    = string
       cidr    = string
-      subnets = map(string)        # { "niosx" = "10.x.x.0/24", "mgmt" = "10.x.x.0/24" }
+      subnets = map(string) # { "niosx" = "10.x.x.0/24", "mgmt" = "10.x.x.0/24" }
     })
 
     vnet_spoke = object({
       name    = string
       cidr    = string
-      subnets = map(string)        # { "vm" = "10.x.x.0/24" }
+      subnets = map(string) # { "vm" = "10.x.x.0/24" }
     })
 
     niosx_bgp_peers = list(object({
@@ -60,4 +60,28 @@ variable "ssh_public_key" {
   type        = string
   description = "Optional public key for VM login"
   default     = null
+}
+
+variable "infoblox_join_token" {
+  description = "Infoblox join token for registering NIOS-X with UDDI"
+  type        = string
+}
+
+variable "niosx_vm_size" {
+  description = "Size for NIOS-X VM"
+  type        = string
+  default     = "Standard_D4s_v5" # or "Standard_F8s"
+}
+
+variable "common_tags" {
+  description = "Tags applied to all resources"
+  type        = map(string)
+  default = {
+    project = "Infoblox-UDDI-Azure-vWAN-Lab"
+  }
+}
+variable "enable_ip_forwarding" {
+  description = "Enable IP forwarding for Anycast and routing use cases"
+  type        = bool
+  default     = true
 }

@@ -1,12 +1,17 @@
-# NOTE: This module only deploys NIOS-X virtual machines (from Azure Marketplace).
-# DNS service enablement, Anycast configuration, and BGP peering must be done manually
-# through the Infoblox UDDI portal or directly on the appliance.
+############################################
+# NIOS-X VM Deployment (Azure Marketplace)
+# -----------------------------------------
+# NOTE:
+# - This module deploys NIOS-X VMs from the Azure Marketplace.
+# - DNS, Anycast, and BGP config remain MANUAL via UDDI/appliance.
+# - NIC IP forwarding is supported (required for Anycast).
+############################################
 
 variable "rg_name"   { type = string }
 variable "location"  { type = string }
 variable "subnet_id" { type = string }
 
-# Image reference for Marketplace or Shared Gallery
+# Marketplace (or shared image) reference
 variable "image" {
   type = object({
     publisher = string
@@ -16,11 +21,17 @@ variable "image" {
   })
 }
 
+# If your Marketplace image requires a plan, set true
+variable "image_requires_plan" {
+  type    = bool
+  default = true
+}
+
 variable "admin_username" { type = string }
 
-# Provide one of these auth methods:
+# Auth: provide ONE of these
 variable "ssh_public_key" {
-  description = "Public SSH key; if set, password auth is disabled"
+  description = "Public SSH key content; if set, password auth is disabled"
   type        = string
   default     = null
 }
@@ -33,9 +44,25 @@ variable "admin_password" {
 }
 
 variable "vm_name_prefix" { type = string }
+
 variable "vm_size" {
-  type    = string
-  default = "Standard_D4s_v5"
+  description = "VM size (Infoblox doc recommends Standard_F8s; keep your choice if preferred)"
+  type        = string
+  default     = "Standard_D4s_v5"
+}
+
+# Enable NIC IP forwarding for Anycast/routing
+variable "enable_ip_forwarding" {
+  type    = bool
+  default = true
+}
+
+# Optional join token (interactive at root by leaving null)
+variable "join_token" {
+  description = "Infoblox join token (injected via cloud-init)"
+  type        = string
+  default     = null
+  sensitive   = true
 }
 
 variable "tags" {
@@ -43,11 +70,15 @@ variable "tags" {
   default = {}
 }
 
+############################################
+# Network Interface (with IP forwarding)
+############################################
 resource "azurerm_network_interface" "nic" {
   name                = "${var.vm_name_prefix}-nic"
   resource_group_name = var.rg_name
   location            = var.location
-
+  ip_forwarding_enabled = var.enable_ip_forwarding
+  
   ip_configuration {
     name                          = "ipcfg"
     subnet_id                     = var.subnet_id
@@ -57,22 +88,20 @@ resource "azurerm_network_interface" "nic" {
   tags = var.tags
 }
 
+############################################
+# Linux VM
+############################################
 resource "azurerm_linux_virtual_machine" "vm" {
-  name                = "${var.vm_name_prefix}-vm"
-  resource_group_name = var.rg_name
-  location            = var.location
-  size                = var.vm_size
-  admin_username      = var.admin_username
+  name                  = "${var.vm_name_prefix}-vm"
+  resource_group_name   = var.rg_name
+  location              = var.location
+  size                  = var.vm_size
+  admin_username        = var.admin_username
   network_interface_ids = [azurerm_network_interface.nic.id]
 
-  # Enforce valid auth combo
+  # Auth model: SSH key OR password
   disable_password_authentication = var.ssh_public_key != null
-
-  # Only set when a password is provided
-  dynamic "admin_password" {
-    for_each = var.ssh_public_key == null && var.admin_password != null ? [1] : []
-    content  = var.admin_password
-  }
+  admin_password                  = var.admin_password
 
   dynamic "admin_ssh_key" {
     for_each = var.ssh_public_key != null ? [1] : []
@@ -89,10 +118,9 @@ resource "azurerm_linux_virtual_machine" "vm" {
     version   = var.image.version
   }
 
-  # If the Marketplace image requires plan terms, include this block.
-  # (name = sku, product = offer, publisher = publisher)
+  # Marketplace plan (when required)
   dynamic "plan" {
-    for_each = [1] # set to [] if your image does not require a plan
+    for_each = var.image_requires_plan ? [1] : []
     content {
       name      = var.image.sku
       product   = var.image.offer
@@ -105,8 +133,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
     storage_account_type = "StandardSSD_LRS"
   }
 
-  # cloud-init (must be base64 for azurerm_linux_virtual_machine)
-  custom_data = filebase64("${path.module}/cloud-init.tpl")
+  # Inject join_token into cloud-init
+  custom_data = base64encode(templatefile("${path.module}/cloud-init.tpl", {
+    join_token = coalesce(var.join_token, "")
+  }))
 
   tags = var.tags
 
@@ -116,4 +146,12 @@ resource "azurerm_linux_virtual_machine" "vm" {
       error_message = "Provide either ssh_public_key or admin_password for the VM."
     }
   }
+}
+
+############################################
+# Outputs
+############################################
+output "private_ip" {
+  description = "The private IP address of the NIOS-X VM"
+  value       = azurerm_network_interface.nic.private_ip_address
 }

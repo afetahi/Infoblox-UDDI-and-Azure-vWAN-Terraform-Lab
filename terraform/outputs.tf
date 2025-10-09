@@ -1,50 +1,43 @@
-
-# Azure vWAN Anycast DNS Lab Outputs
-
-
-# Virtual WAN info
+# vWAN
 output "virtual_wan_name" {
   description = "The name of the Azure Virtual WAN deployed."
-  value       = azurerm_virtual_wan.vwan.name
+  value       = module.vwan.vwan_name
 }
 
-# Hub information
+# Hubs
 output "hub_names" {
   description = "Names of all vWAN hubs deployed per region."
-  value       = { for k, v in azurerm_virtual_hub.hub : k => v.name }
+  value       = module.vwan.hub_names
 }
 
 output "hub_ids" {
   description = "Resource IDs of all Azure Virtual Hubs."
-  value       = { for k, v in azurerm_virtual_hub.hub : k => v.id }
+  value       = module.vwan.hub_ids
 }
 
-# BGP peer IPs for manual NIOS-X configuration
+# BGP router IPs per hub (use these as peers on NIOS-X)
 output "hub_bgp_peering_ips" {
   description = "BGP router IPs per hub region to be used as peers in NIOS-X."
-  value = {
-    for k, v in azurerm_virtual_hub.hub :
-    k => v.virtual_router_ips
-  }
+  value       = module.vwan.hub_bgp_router_ips
 }
 
-# VNets and connection info
-output "vnet_names" {
-  description = "Deployed VNets per region."
-  value       = { for k, v in azurerm_virtual_network.vnet : k => v.name }
+# Shared VNet names by region.
+output "shared_vnet_names" {
+  value = { for k, m in module.shared_vnets : k => m.vnet.name }
 }
 
+# Spoke VNet names by region.
+output "spoke_vnet_names" {
+  value = { for k, m in module.spoke_vnets : k => m.vnet.name }
+}
+
+# Hub-to-VNet connection names per region (requires module output below).
 output "hub_connection_names" {
-  description = "Hub-to-VNet connection names per region."
-  value       = { for k, v in azurerm_virtual_hub_connection.connection : k => v.name }
+  value = { for k, m in module.hub_connections : k => m.connection_names }
 }
 
-# Optional: NIOS-X VM private IPs (if deployed)
+# Optional: NIOS-X VM private IPs (only if deployed)
 output "niosx_vm_private_ips" {
-  description = "Private IPs of NIOS-X VMs, useful for manual configuration."
-  value       = can(azurerm_network_interface.niosx) ? { for k, v in azurerm_network_interface.niosx : k => v.private_ip_address } : {}
+  description = "Private IPs of NIOS-X VMs by region (empty if not deployed)."
+  value       = try({ for k, m in module.niosx_vms : k => m.private_ip }, {})
 }
-
-# Note: Validation (BGP session state, routes, Anycast reachability)
-# must be performed manually after NIOS-X configuration.
-

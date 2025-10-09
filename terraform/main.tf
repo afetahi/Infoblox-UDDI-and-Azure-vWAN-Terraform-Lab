@@ -44,22 +44,33 @@ module "hub_bgp" {
   source   = "../modules/hub-bgp"
   for_each = var.locations
 
-  rg_name   = each.value.rg_name
-  hub_name  = each.value.hub.name
-  peers     = each.value.niosx_bgp_peers
-  hub_asn   = each.value.hub.asn
-  anycast   = var.anycast_prefix
+  rg_name = each.value.rg_name
+  hub_id  = module.vwan.hubs[each.key].id # <-- add this
+  peers   = each.value.niosx_bgp_peers
+  hub_asn = each.value.hub.asn
+  anycast = var.anycast_prefix
 }
 
 # Optional: deploy NIOS-X VMs
 module "niosx_vms" {
-  source          = "../modules/niosx-vm"
-  for_each        = var.deploy_niosx_vms ? var.locations : {}
-  rg_name         = each.value.rg_name
-  location        = each.value.location
-  subnet_id       = module.shared_vnets[each.key].subnets["niosx"]
-  image           = var.niosx_image
-  admin_username  = var.admin_username
-  ssh_public_key  = var.ssh_public_key
-  vm_name_prefix  = "niosx-${each.key}"
+  source   = "../modules/niosx-vm"
+  for_each = var.deploy_niosx_vms ? var.locations : {}
+
+  rg_name        = each.value.rg_name
+  location       = each.value.location
+  subnet_id      = module.shared_vnets[each.key].subnets["niosx"]
+  vm_name_prefix = "niosx-${each.key}"
+
+  image                = var.niosx_image
+  image_requires_plan  = true
+  vm_size              = var.niosx_vm_size # or leave unset to use module default
+  enable_ip_forwarding = true
+
+  admin_username = var.admin_username
+  ssh_public_key = file(var.ssh_public_key)
+
+  # this makes apply prompt you if you didn’t set it in tfvars/env
+  join_token = var.infoblox_join_token
+
+  tags = merge(var.common_tags, { region = each.key, role = "niosx" })
 }
